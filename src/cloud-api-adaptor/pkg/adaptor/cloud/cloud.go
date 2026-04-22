@@ -430,16 +430,16 @@ func (s *cloudService) StopVM(ctx context.Context, req *pb.StopVMRequest) (*pb.S
 		return nil, err
 	}
 
-	if err := sandbox.agentProxy.Shutdown(); err != nil {
-		logger.Printf("stopping agent proxy: %v", err)
-	}
-
 	if err := s.provider.DeleteInstance(ctx, sandbox.instanceID); err != nil {
 		logger.Printf("Error deleting an instance %s: %v", sandbox.instanceID, err)
 	} else if s.ppService != nil {
 		if err := s.ppService.ReleasePeerPod(sandbox.podName, sandbox.podNamespace, sandbox.instanceID); err != nil {
 			logger.Printf("failed to release PeerPod %v", err)
 		}
+	}
+
+	if err := sandbox.agentProxy.Shutdown(); err != nil {
+		logger.Printf("stopping agent proxy: %v", err)
 	}
 
 	if err := s.workerNode.Teardown(sandbox.netNSPath, sandbox.podNetwork); err != nil {
