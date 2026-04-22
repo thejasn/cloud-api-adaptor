@@ -426,8 +426,11 @@ func (s *cloudService) StopVM(ctx context.Context, req *pb.StopVMRequest) (*pb.S
 	sandbox, err := s.getSandbox(sid)
 	if err != nil {
 		err = fmt.Errorf("stopping VM: %v", err)
+
 		logger.Print(err)
-		return nil, err
+		// Return success - peerpod-ctrl will cleanup VM via PeerPod CR finalizer
+		logger.Printf("sandbox %s not found, returning success", sid)
+		return &pb.StopVMResponse{}, nil
 	}
 
 	if err := sandbox.agentProxy.Shutdown(); err != nil {

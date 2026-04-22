@@ -157,3 +157,26 @@ func TestCloudService(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, res3)
 }
+
+func TestStopVM_SandboxNotFound(t *testing.T) {
+	ctx := context.Background()
+	dir := t.TempDir()
+
+	proxyFactory := &mockProxyFactory{
+		podsDir: dir,
+	}
+
+	cfg := &ServerConfig{
+		PodsDir:       dir,
+		ForwarderPort: forwarder.DefaultListenPort,
+	}
+
+	s := NewService(&mockProvider{}, proxyFactory, &mockWorkerNode{}, cfg)
+	assert.NotNil(t, s)
+
+	// StopVM for a sandbox that was never created should return success
+	res, err := s.StopVM(ctx, &pb.StopVMRequest{Id: "nonexistent-sandbox"})
+
+	assert.NoError(t, err, "StopVM should succeed even when sandbox is not found")
+	assert.NotNil(t, res, "StopVM should return a response")
+}
